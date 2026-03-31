@@ -25,6 +25,18 @@
         .legend-item { display: flex; align-items: center; margin-bottom: 8px; }
         .pin-preview { width: 18px; height: 24px; margin-right: 10px; }
         .custom-pin { display: flex; justify-content: center; align-items: center; }
+        
+        /* Style pour le label permanent */
+        .label-bouse {
+            background: rgba(255, 255, 255, 0.9);
+            border: 1px solid #c0392b;
+            color: #c0392b;
+            font-weight: bold;
+            font-size: 14px;
+            padding: 2px 6px;
+            border-radius: 4px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
     </style>
 </head>
 <body>
@@ -119,9 +131,15 @@
         popupAnchor: [0, -25]
     });
 
-    // Ajout de la maison au 1 rue Jacques Ellul
+    // Ajout de la maison au 1 rue Jacques Ellul avec le label permanent
     L.marker([44.8266, -0.5611], { icon: houseIcon }).addTo(map)
-     .bindPopup("<b>1 rue Jacques Ellul</b><br>IUT Bordeaux Montaigne / IJBA");
+     .bindPopup("<b>1 rue Jacques Ellul</b><br>IUT Bordeaux Montaigne / IJBA")
+     .bindTooltip("<b>Label Bouse</b>", { 
+         permanent: true, 
+         direction: 'top', 
+         className: 'label-bouse',
+         offset: [0, -25]
+     });
 
     function getColor(niveauService) {
         if (niveauService.includes('/Expert')) return '#e74c3c';
