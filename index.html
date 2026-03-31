@@ -24,13 +24,7 @@
         }
         .legend-item { display: flex; align-items: center; margin-bottom: 8px; }
         .pin-preview { width: 18px; height: 24px; margin-right: 10px; }
-        
-        /* Style pour les icônes personnalisées */
-        .custom-pin {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
+        .custom-pin { display: flex; justify-content: center; align-items: center; }
     </style>
 </head>
 <body>
@@ -51,6 +45,10 @@
             <svg class="pin-preview" viewBox="0 0 30 42"><path d="M15 0C6.7 0 0 6.7 0 15c0 11.2 15 27 15 27s15-15.8 15-27c0-8.3-6.7-15-15-15z" fill="#3498db"/><circle cx="15" cy="15" r="5" fill="white"/></svg>
             Basique / Autre
         </div>
+        <div class="legend-item">
+            <svg class="pin-preview" viewBox="0 0 50 50"><path d="M25 5 L5 25 L10 25 L10 45 L40 45 L40 25 L45 25 Z" fill="#c0392b"/></svg>
+            Point d'intérêt (Maison)
+        </div>
     </div>
     <hr>
     <p><small>Données : Bordeaux Métropole<br>Fond de carte : CartoDB Voyager</small></p>
@@ -64,8 +62,8 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 
 <script>
-    // Initialisation de la carte centrée sur Bordeaux
-    const map = L.map('map').setView([44.837789, -0.57918], 12);
+    // Initialisation de la carte
+    const map = L.map('map').setView([44.837789, -0.57918], 13);
 
     L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
         attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
@@ -73,7 +71,7 @@
         maxZoom: 20
     }).addTo(map);
 
-    // Fonction pour créer une icône en forme de pin SVG
+    // Icône Pin standard
     function createPinIcon(color) {
         return L.divIcon({
             className: 'custom-pin',
@@ -86,6 +84,22 @@
             popupAnchor: [0, -40]
         });
     }
+
+    // Grosse Maison Rouge
+    const houseIcon = L.divIcon({
+        className: 'custom-pin',
+        html: `<svg width="60" height="60" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M25 5 L5 25 H10 V45 H40 V25 H45 L25 5Z" fill="#c0392b" stroke="white" stroke-width="2"/>
+                <rect x="20" y="30" width="10" height="15" fill="white"/>
+               </svg>`,
+        iconSize: [60, 60],
+        iconAnchor: [30, 45],
+        popupAnchor: [0, -40]
+    });
+
+    // Ajout de la maison au 1 rue Jacques Ellul
+    L.marker([44.8266, -0.5611], { icon: houseIcon }).addTo(map)
+     .bindPopup("<b>1 rue Jacques Ellul</b><br>IUT Bordeaux Montaigne / IJBA");
 
     function getColor(niveauService) {
         if (niveauService.includes('/Expert')) return '#e74c3c';
@@ -104,16 +118,8 @@
                 if (row.latitude && row.longitude) {
                     const color = getColor(row.niveau_service || '');
                     const icon = createPinIcon(color);
-                    
-                    const marker = L.marker([row.latitude, row.longitude], { icon: icon }).addTo(map);
-
-                    marker.bindPopup(`
-                        <strong>${row.nom}</strong><br>
-                        <em>${row.type_lieu}</em><br><br>
-                        <b>Commune :</b> ${row.adresse_commune}<br>
-                        <b>Public :</b> ${row.public_cible}<br>
-                        <b>Tarifs :</b> ${row.tarifs}
-                    `);
+                    L.marker([row.latitude, row.longitude], { icon: icon }).addTo(map)
+                     .bindPopup(`<strong>${row.nom}</strong><br><em>${row.type_lieu}</em><br><br><b>Commune :</b> ${row.adresse_commune}`);
                 }
             });
         }
