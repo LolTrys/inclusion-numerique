@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Carte de l'Inclusion Numérique - Bordeaux Métropole</title>
+    
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    
+    <style>
+        body { margin: 0; padding: 0; font-family: sans-serif; }
+        #map { height: 100vh; width: 100%; }
+        .info-panel {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            z-index: 1000;
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 0 15px rgba(0,0,0,0.2);
+            max-width: 300px;
+        }
+        .legend-item { display: flex; align-items: center; margin-bottom: 5px; }
+        .dot { height: 12px; width: 12px; border-radius: 50%; margin-right: 8px; }
+    </style>
+</head>
+<body>
+
+<div class="info-panel">
+    <h3>Inclusion Numérique</h3>
+    <p>Visualisation des lieux par niveau de service maximal.</p>
+    <div class="legend">
+        <div class="legend-item"><span class="dot" style="background: #e74c3c;"></span> Expert</div>
+        <div class="legend-item"><span class="dot" style="background: #f39c12;"></span> Maîtrise</div>
+        <div class="legend-item"><span class="dot" style="background: #3498db;"></span> Basique / Autre</div>
+    </div>
+    <hr>
+    <p><small>Données : Bordeaux Métropole<br>Fond de carte : CartoDB Voyager</small></p>
+</div>
+
+<div id="map"></div>
+
+<!-- Leaflet JS -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<!-- PapaParse pour le CSV -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+
+<script>
+    // Initialisation de la carte centrée sur Bordeaux
+    const map = L.map('map').setView([44.837789, -0.57918], 12);
+
+    // Utilisation de CartoDB Voyager (Pas d'OpenStreetMap standard)
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+        subdomains: 'abcd',
+        maxZoom: 20
+    }).addTo(map);
+
+    // Fonction pour déterminer la couleur selon le niveau de service
+    function getColor(niveauService) {
+        if (niveauService.includes('/Expert')) return '#e74c3c'; // Rouge
+        if (niveauService.includes('/Maîtrise')) return '#f39c12'; // Orange
+        return '#3498db'; // Bleu
+    }
+
+    // Chargement du CSV
+    // Note : Le nom du fichier contient des espaces, on doit l'encoder proprement
+    const csvUrl = 'RAW_met_lieux_inclusion_numerique%20-%20RAW_met_lieux_inclusion_numerique.csv';
+
+    Papa.parse(csvUrl, {
+        download: true,
+        header: true,
+        dynamicTyping: true,
+        complete: function(results) {
+            results.data.forEach(row => {
+                if (row.latitude && row.longitude) {
+                    const color = getColor(row.niveau_service || '');
+                    
+                    const marker = L.circleMarker([row.latitude, row.longitude], {
+                        radius: 8,
+                        fillColor: color,
+                        color: "#fff",
+                        weight: 1,
+                        opacity: 1,
+                        fillOpacity: 0.8
+                    }).addTo(map);
+
+                    marker.bindPopup(`
+                        <strong>${row.nom}</strong><br>
+                        <em>${row.type_lieu}</em><br><br>
+                        <b>Commune :</b> ${row.adresse_commune}<br>
+                        <b>Public :</b> ${row.public_cible}<br>
+                        <b>Tarifs :</b> ${row.tarifs}
+                    `);
+                }
+            });
+        },
+        error: function(err) {
+            console.error("Erreur lors de la lecture du CSV:", err);
+            alert("Impossible de charger les données du CSV. Vérifiez que le fichier est bien présent à la racine.");
+        }
+    });
+</script>
+
+</body>
+</html>
