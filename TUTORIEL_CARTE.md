@@ -1,42 +1,36 @@
-# Guide Méthodologique : Création d'une Carte Interactive de l'Inclusion Numérique
+# Étude de cas : Création de la Carte de l'Inclusion Numérique à Bordeaux Métropole
 
-Ce document détaille la démarche pas à pas pour transformer une base de données brute (CSV) en une visualisation géographique interactive déployée sur le web.
-
----
-
-## 📋 Étape 1 : Préparation de la base de données (Le CSV)
-Avant toute chose, votre fichier de données doit être structuré pour être "compris" par une carte.
-1.  **Coordonnées GPS** : Assurez-vous d'avoir deux colonnes distinctes pour la Latitude et la Longitude (format décimal, ex: 44.83).
-2.  **Colonnes de filtrage** : Identifiez les critères que vous voulez voir apparaître (Nom du lieu, Commune, Public cible).
-3.  **Nettoyage** : Vérifiez qu'il n'y a pas de lignes vides ou de coordonnées erronées qui pourraient faire planter l'affichage.
-
-## 🗺️ Étape 2 : Choix des composants de la carte
-Une carte interactive se compose de trois couches superposées :
-1.  **Le fond de carte** : C'est le dessin des rues et des paysages. Nous avons choisi un style "Voyager" (épuré et clair) pour que les données restent lisibles.
-2.  **Le calque administratif** : Ce sont les limites des communes (GeoJSON). Cela permet de situer les points dans leur contexte politique et territorial (Bordeaux Métropole).
-3.  **Les données (Marqueurs)** : Ce sont les points issus de votre CSV.
-
-## 🎨 Étape 3 : Logique visuelle et catégorisation
-Pour que la carte appuie votre hypothèse (ex: l'insuffisance de l'offre), il faut une lecture visuelle immédiate :
-*   **Code couleur** : Nous avons attribué une couleur à chaque niveau de service (Rouge pour Expert, Orange pour Maîtrise, Bleu pour Basique).
-*   **Forme des marqueurs** : L'utilisation de "pins" (épingles) avec une pastille centrale permet de mieux localiser le point précis qu'un simple cercle.
-*   **Points d'intérêt** : Il est possible d'ajouter des marqueurs spéciaux (comme la Maison Rouge) pour signaler des lieux symboliques ou des anomalies.
-
-## 🖱️ Étape 4 : Interactivité et Informations
-La carte ne doit pas être une image fixe, elle doit parler à l'utilisateur :
-*   **Les Info-bulles (Popups)** : Au clic, une fenêtre s'ouvre pour donner le détail du lieu (Tarifs, Horaires, Public).
-*   **Les Étiquettes permanentes (Tooltips)** : Pour les points cruciaux, le nom s'affiche directement sans avoir besoin de cliquer (ex: "Label Bouse").
-*   **Le survol des communes** : Passer la souris sur une zone affiche son nom pour faciliter la navigation géographique.
-
-## 🚀 Étape 5 : Publication et Mise en ligne (GitHub Pages)
-Une fois la structure prête, la mise en ligne suit un processus simple :
-1.  **Stockage** : On dépose le fichier HTML, le CSV et les limites communales sur un dépôt GitHub.
-2.  **Activation** : Dans les réglages (Settings > Pages), on active l'hébergement gratuit.
-3.  **Accessibilité** : La carte devient consultable via une adresse URL unique, partageable instantanément.
+Ce document retrace le cheminement méthodologique suivi pour démontrer, par la donnée et la cartographie, l'hypothèse d'une répartition inégale des efforts d'inclusion numérique sur le territoire.
 
 ---
 
-## 💡 Avantages de cette méthode
-*   **Mise à jour instantanée** : Si vous modifiez le fichier CSV et que vous le renvoyez sur GitHub, la carte se met à jour toute seule.
-*   **Zéro coût** : Toute la chaîne (outils de carte, hébergement) est gratuite.
-*   **Mobilité** : La carte est consultable aussi bien sur ordinateur que sur smartphone.
+## 🧐 1. L'Audit de la Donnée brute
+Tout commence par l'analyse du fichier `RAW_met_lieux_inclusion_numerique.csv`. 
+- **Identification des leviers** : Parmi les 42 colonnes, nous avons isolé les plus critiques pour l'analyse : la localisation (GPS), le niveau de service (Expert/Maîtrise/Basique) et le statut de la structure (Public/Privé).
+- **Le constat chiffré** : L'analyse statistique a révélé que 45% de l'offre "Expert" est concentrée à Bordeaux centre, laissant les communes périphériques avec une offre très limitée (parfois 1 seul lieu pour 60 000 habitants).
+
+## 💡 2. La Stratégie de Visualisation
+Pour transformer ce constat en preuve visuelle, nous avons opté pour une carte interactive "Serverless" (sans base de données) :
+- **Lecture directe** : Utilisation de la bibliothèque `PapaParse` pour que le navigateur lise le fichier CSV en temps réel. Cela permet une mise à jour simplifiée : changez le CSV, la carte change.
+- **Le moteur de carte** : Choix de `Leaflet.js` pour sa légèreté et sa compatibilité mobile, avec un fond de carte `CartoDB Voyager` pour privilégier la lisibilité des données sur le plan urbain.
+
+## 🗺️ 3. Contextualisation Territoriale
+Un point sur une carte vide ne dit rien. Pour prouver "l'insuffisance", il fallait montrer les frontières :
+- **Intégration GeoJSON** : Nous avons ajouté les limites administratives des 28 communes de la Métropole. 
+- **Résultat** : Les "zones blanches" (villes sans aucun point rouge "Expert") apparaissent immédiatement, rendant l'argument géographique indiscutable.
+
+## 🎨 4. Personnalisation et Narration (Storytelling)
+La carte a été "éditorialisée" pour porter un message :
+- **Code couleur sémantique** : Rouge pour l'expertise complète, orange pour la maîtrise, bleu pour l'initiation.
+- **Marqueurs personnalisés** : Utilisation de "pins" SVG pour une précision chirurgicale.
+- **Ajout de points d'intérêt** : Insertion manuelle d'un marqueur symbolique (Grosse Maison Rouge au 1 rue Jacques Ellul) avec un label permanent "**Label Bouse**" pour souligner des zones spécifiques ou des points d'intérêt particuliers.
+
+## 🚀 5. Déploiement et Pérennité
+La réussite du projet repose sur sa facilité de partage :
+- **GitHub Pages** : Hébergement du code et des données sur la même plateforme.
+- **Automatisation** : En utilisant Git, chaque modification du code ou des données est déployée en moins d'une minute sur l'URL publique.
+
+---
+
+## 🏆 Résultat final
+Vous avez réussi à créer un outil qui ne se contente pas d'afficher des adresses, mais qui **raconte une situation politique et sociale**. Cette carte est désormais un support de plaidoyer prêt à être présenté, montrant clairement la concentration de l'offre et les inégalités de couverture numérique de la Métropole.
