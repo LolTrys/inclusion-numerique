@@ -1,102 +1,42 @@
-# Tutoriel : Créer une Carte Interactive à partir d'un CSV
+# Guide Méthodologique : Création d'une Carte Interactive de l'Inclusion Numérique
 
-Ce guide récapitule la méthodologie utilisée pour transformer le fichier `RAW_met_lieux_inclusion_numerique.csv` en une carte interactive web utilisant **Leaflet.js**, **PapaParse** et **GitHub Pages**.
-
----
-
-## 🚀 Vue d'ensemble de la solution
-L'objectif est de créer une application cartographique sans base de données ("Serverless"), où le navigateur lit directement un fichier CSV pour positionner des points sur un fond de carte dynamique.
-
-### Technologies utilisées :
-- **Leaflet.js** : Bibliothèque JavaScript de référence pour les cartes interactives.
-- **PapaParse** : Analyseur de CSV ultra-rapide pour JavaScript.
-- **CartoDB Voyager** : Fond de carte esthétique et lisible (alternative à OpenStreetMap).
-- **GitHub Pages** : Hébergement gratuit et automatique du projet.
+Ce document détaille la démarche pas à pas pour transformer une base de données brute (CSV) en une visualisation géographique interactive déployée sur le web.
 
 ---
 
-## 🛠️ Étapes de réalisation
+## 📋 Étape 1 : Préparation de la base de données (Le CSV)
+Avant toute chose, votre fichier de données doit être structuré pour être "compris" par une carte.
+1.  **Coordonnées GPS** : Assurez-vous d'avoir deux colonnes distinctes pour la Latitude et la Longitude (format décimal, ex: 44.83).
+2.  **Colonnes de filtrage** : Identifiez les critères que vous voulez voir apparaître (Nom du lieu, Commune, Public cible).
+3.  **Nettoyage** : Vérifiez qu'il n'y a pas de lignes vides ou de coordonnées erronées qui pourraient faire planter l'affichage.
 
-### 1. Préparation des données (CSV)
-Pour que la carte fonctionne, votre fichier CSV doit impérativement contenir deux colonnes nommées (ou identifiables) :
-- `latitude` (ex: 44.8377)
-- `longitude` (ex: -0.5791)
+## 🗺️ Étape 2 : Choix des composants de la carte
+Une carte interactive se compose de trois couches superposées :
+1.  **Le fond de carte** : C'est le dessin des rues et des paysages. Nous avons choisi un style "Voyager" (épuré et clair) pour que les données restent lisibles.
+2.  **Le calque administratif** : Ce sont les limites des communes (GeoJSON). Cela permet de situer les points dans leur contexte politique et territorial (Bordeaux Métropole).
+3.  **Les données (Marqueurs)** : Ce sont les points issus de votre CSV.
 
-*Astuce : Utilisez des noms de colonnes simples sans caractères spéciaux pour faciliter l'intégration.*
+## 🎨 Étape 3 : Logique visuelle et catégorisation
+Pour que la carte appuie votre hypothèse (ex: l'insuffisance de l'offre), il faut une lecture visuelle immédiate :
+*   **Code couleur** : Nous avons attribué une couleur à chaque niveau de service (Rouge pour Expert, Orange pour Maîtrise, Bleu pour Basique).
+*   **Forme des marqueurs** : L'utilisation de "pins" (épingles) avec une pastille centrale permet de mieux localiser le point précis qu'un simple cercle.
+*   **Points d'intérêt** : Il est possible d'ajouter des marqueurs spéciaux (comme la Maison Rouge) pour signaler des lieux symboliques ou des anomalies.
 
-### 2. Structure du fichier HTML (`index.html`)
-Nous utilisons des liens CDN pour charger les bibliothèques sans installation locale.
+## 🖱️ Étape 4 : Interactivité et Informations
+La carte ne doit pas être une image fixe, elle doit parler à l'utilisateur :
+*   **Les Info-bulles (Popups)** : Au clic, une fenêtre s'ouvre pour donner le détail du lieu (Tarifs, Horaires, Public).
+*   **Les Étiquettes permanentes (Tooltips)** : Pour les points cruciaux, le nom s'affiche directement sans avoir besoin de cliquer (ex: "Label Bouse").
+*   **Le survol des communes** : Passer la souris sur une zone affiche son nom pour faciliter la navigation géographique.
 
-```html
-<!-- Leaflet CSS & JS -->
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-
-<!-- PapaParse (Analyseur CSV) -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
-
-<!-- Conteneur de la carte -->
-<div id="map" style="height: 100vh;"></div>
-```
-
-### 3. Initialisation de la carte et du fond de carte
-On initialise la vue sur Bordeaux et on ajoute les limites des communes via un fichier GeoJSON pour donner du contexte.
-
-```javascript
-const map = L.map('map').setView([44.83, -0.57], 11);
-
-// Fond de carte CartoDB Voyager
-L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png').addTo(map);
-
-// Optionnel : Ajout des limites communales (GeoJSON)
-fetch('communes_bordeaux_metropole.geojson')
-    .then(res => res.json())
-    .then(data => L.geoJSON(data).addTo(map));
-```
-
-### 4. Lecture dynamique du CSV avec PapaParse
-Cette étape est cruciale car elle lie vos données brutes à la visualisation géographique.
-
-```javascript
-Papa.parse('votre_fichier.csv', {
-    download: true,
-    header: true,
-    dynamicTyping: true,
-    complete: function(results) {
-        results.data.forEach(row => {
-            if (row.latitude && row.longitude) {
-                // Création d'un marqueur personnalisé
-                const marker = L.marker([row.latitude, row.longitude]).addTo(map);
-                
-                // Popup au clic avec les infos du CSV
-                marker.bindPopup(`<b>${row.nom}</b><br>${row.adresse_commune}`);
-            }
-        });
-    }
-});
-```
-
-### 5. Personnalisation avancée
-- **Icônes SVG (Pins)** : Utilisez `L.divIcon` pour injecter du code SVG et changer la couleur selon une donnée (ex: Rouge pour "Expert", Bleu pour "Basique").
-- **Labels permanents** : Utilisez `.bindTooltip("Texte", { permanent: true })` pour afficher des noms (comme "Label Bouse") sans action de l'utilisateur.
+## 🚀 Étape 5 : Publication et Mise en ligne (GitHub Pages)
+Une fois la structure prête, la mise en ligne suit un processus simple :
+1.  **Stockage** : On dépose le fichier HTML, le CSV et les limites communales sur un dépôt GitHub.
+2.  **Activation** : Dans les réglages (Settings > Pages), on active l'hébergement gratuit.
+3.  **Accessibilité** : La carte devient consultable via une adresse URL unique, partageable instantanément.
 
 ---
 
-## 🌍 Déploiement sur le Web (GitHub Pages)
-
-1. **Pousser les fichiers sur GitHub** :
-   ```bash
-   git add .
-   git commit -m "Mise en ligne de la carte"
-   git push origin main
-   ```
-2. **Activer l'hébergement** :
-   - Allez sur votre dépôt GitHub.
-   - **Settings** > **Pages**.
-   - Dans "Branch", sélectionnez `main` (ou la branche de votre choix) et cliquez sur **Save**.
-   - Votre carte sera accessible à l'adresse : `https://[votre-pseudo].github.io/[nom-du-depot]/`
-
----
-
-## 💡 Maintenance
-Pour mettre à jour votre carte, il vous suffit de remplacer le fichier CSV par une nouvelle version portant le même nom et de faire un `git push`. La carte se mettra à jour automatiquement pour tous les utilisateurs.
+## 💡 Avantages de cette méthode
+*   **Mise à jour instantanée** : Si vous modifiez le fichier CSV et que vous le renvoyez sur GitHub, la carte se met à jour toute seule.
+*   **Zéro coût** : Toute la chaîne (outils de carte, hébergement) est gratuite.
+*   **Mobilité** : La carte est consultable aussi bien sur ordinateur que sur smartphone.
