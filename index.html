@@ -22,8 +22,15 @@
             box-shadow: 0 0 15px rgba(0,0,0,0.2);
             max-width: 300px;
         }
-        .legend-item { display: flex; align-items: center; margin-bottom: 5px; }
-        .dot { height: 12px; width: 12px; border-radius: 50%; margin-right: 8px; }
+        .legend-item { display: flex; align-items: center; margin-bottom: 8px; }
+        .pin-preview { width: 18px; height: 24px; margin-right: 10px; }
+        
+        /* Style pour les icônes personnalisées */
+        .custom-pin {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
     </style>
 </head>
 <body>
@@ -32,9 +39,18 @@
     <h3>Inclusion Numérique</h3>
     <p>Visualisation des lieux par niveau de service maximal.</p>
     <div class="legend">
-        <div class="legend-item"><span class="dot" style="background: #e74c3c;"></span> Expert</div>
-        <div class="legend-item"><span class="dot" style="background: #f39c12;"></span> Maîtrise</div>
-        <div class="legend-item"><span class="dot" style="background: #3498db;"></span> Basique / Autre</div>
+        <div class="legend-item">
+            <svg class="pin-preview" viewBox="0 0 30 42"><path d="M15 0C6.7 0 0 6.7 0 15c0 11.2 15 27 15 27s15-15.8 15-27c0-8.3-6.7-15-15-15z" fill="#e74c3c"/><circle cx="15" cy="15" r="5" fill="white"/></svg>
+            Expert
+        </div>
+        <div class="legend-item">
+            <svg class="pin-preview" viewBox="0 0 30 42"><path d="M15 0C6.7 0 0 6.7 0 15c0 11.2 15 27 15 27s15-15.8 15-27c0-8.3-6.7-15-15-15z" fill="#f39c12"/><circle cx="15" cy="15" r="5" fill="white"/></svg>
+            Maîtrise
+        </div>
+        <div class="legend-item">
+            <svg class="pin-preview" viewBox="0 0 30 42"><path d="M15 0C6.7 0 0 6.7 0 15c0 11.2 15 27 15 27s15-15.8 15-27c0-8.3-6.7-15-15-15z" fill="#3498db"/><circle cx="15" cy="15" r="5" fill="white"/></svg>
+            Basique / Autre
+        </div>
     </div>
     <hr>
     <p><small>Données : Bordeaux Métropole<br>Fond de carte : CartoDB Voyager</small></p>
@@ -51,22 +67,32 @@
     // Initialisation de la carte centrée sur Bordeaux
     const map = L.map('map').setView([44.837789, -0.57918], 12);
 
-    // Utilisation de CartoDB Voyager (Pas d'OpenStreetMap standard)
     L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
         attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
         subdomains: 'abcd',
         maxZoom: 20
     }).addTo(map);
 
-    // Fonction pour déterminer la couleur selon le niveau de service
-    function getColor(niveauService) {
-        if (niveauService.includes('/Expert')) return '#e74c3c'; // Rouge
-        if (niveauService.includes('/Maîtrise')) return '#f39c12'; // Orange
-        return '#3498db'; // Bleu
+    // Fonction pour créer une icône en forme de pin SVG
+    function createPinIcon(color) {
+        return L.divIcon({
+            className: 'custom-pin',
+            html: `<svg width="30" height="42" viewBox="0 0 30 42" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M15 0C6.71573 0 0 6.71573 0 15C0 26.25 15 42 15 42C15 42 30 26.25 30 15C30 6.71573 23.2843 0 15 0Z" fill="${color}"/>
+                    <circle cx="15" cy="15" r="6" fill="white"/>
+                   </svg>`,
+            iconSize: [30, 42],
+            iconAnchor: [15, 42],
+            popupAnchor: [0, -40]
+        });
     }
 
-    // Chargement du CSV
-    // Note : Le nom du fichier contient des espaces, on doit l'encoder proprement
+    function getColor(niveauService) {
+        if (niveauService.includes('/Expert')) return '#e74c3c';
+        if (niveauService.includes('/Maîtrise')) return '#f39c12';
+        return '#3498db';
+    }
+
     const csvUrl = 'RAW_met_lieux_inclusion_numerique%20-%20RAW_met_lieux_inclusion_numerique.csv';
 
     Papa.parse(csvUrl, {
@@ -77,15 +103,9 @@
             results.data.forEach(row => {
                 if (row.latitude && row.longitude) {
                     const color = getColor(row.niveau_service || '');
+                    const icon = createPinIcon(color);
                     
-                    const marker = L.circleMarker([row.latitude, row.longitude], {
-                        radius: 8,
-                        fillColor: color,
-                        color: "#fff",
-                        weight: 1,
-                        opacity: 1,
-                        fillOpacity: 0.8
-                    }).addTo(map);
+                    const marker = L.marker([row.latitude, row.longitude], { icon: icon }).addTo(map);
 
                     marker.bindPopup(`
                         <strong>${row.nom}</strong><br>
@@ -96,10 +116,6 @@
                     `);
                 }
             });
-        },
-        error: function(err) {
-            console.error("Erreur lors de la lecture du CSV:", err);
-            alert("Impossible de charger les données du CSV. Vérifiez que le fichier est bien présent à la racine.");
         }
     });
 </script>
